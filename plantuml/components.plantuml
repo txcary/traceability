@@ -1,33 +1,32 @@
 @startuml
+class ERC20
+class "token" as token {
+	generator
+	supervisor
+	creditToPay[address=>uint]
+	setCreditToPay mustSupervisor(address, uint)
+	sendCredit mustSupervisor(address, uint)
+	setSupervisor mustGenerator(address)
+	modifyer mustGenerator()
+	modifyer mustSupervisor()
+	modifyer mustOwnerOfSources()
+	modifyer mustPay()
+}
 class "traceability" as trace {
-	objects[]
-	roles[]
-	create()
-	destroy()
-}
-class "role" as role {
-	name
-	getName()
-	setName()
-}
-class "certification" as cert {
-	certifyer
-	requirer
-	time
-}
-class "object" as obj {
-	parents[]
-	certifications[]
-	owners[]
-	pushTo
-	pullFrom
-	push()
+	objects[id=>object]
+	create mustOwnerOfSources mustPay(sources[])
+	push mustPay()
 	pull()
+	destroy mustSupervisor()
+}
+class "object" as object {
+	sources[]
+	owners[]
+	credits[address=>uint]
+	pushTo
 }
 
-trace *-- obj
-trace *-- role
-obj *-- cert
-obj *-- role
-cert *-- role
+ERC20 <|- token
+token <|- trace
+trace *-- object
 @enduml

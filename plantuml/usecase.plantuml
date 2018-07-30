@@ -1,0 +1,53 @@
+@startuml
+actor "监督者" as supervisor
+actor "原料厂商" as vendor
+actor "养殖企业" as manufactor
+actor "分销商" as distributor
+actor "零售商" as retailer
+actor "消费者" as consumer
+rectangle {
+	usecase "授信，扣除，定期返还担保代币" as supervise
+	usecase "Create, Push" as createMaterial
+	usecase "Pull, Create, Push" as createPig
+	usecase "Pull, Create, Push" as createBody
+	usecase "Pull, Create, Push" as createPork
+	usecase "Pull" as consume 
+	rectangle "商品" as goods {
+		together {
+			component "饲料，兽药" as material
+			component "猪" as pig
+			component "胴体" as body
+			component "猪肉" as pork
+		}
+		database "push时存入的信用代币" as token
+		material .down. pig
+		pig .down. body
+		body .down. pork
+	}
+}
+
+usecase "投诉, 提交证据" as complaint
+consumer->complaint
+complaint-->supervisor
+
+supervisor-down->supervise
+supervise-down->token
+
+vendor-right->createMaterial
+createMaterial-right->material
+
+material-right->createPig
+manufactor-right->createPig
+createPig-right->pig
+
+pig-right->createBody 
+distributor-right->createBody 
+createBody-right->body
+
+body-right->createPork
+retailer-right->createPork
+createPork-right->pork
+
+pork-left->consume
+consume-left->consumer
+@enduml
