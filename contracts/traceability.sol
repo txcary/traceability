@@ -52,3 +52,83 @@ contract TRToken is ERC20 {
 		return true;
     }
 }
+
+contract TRSupervise is TRToken {
+	address generator;
+	address supervisor;	
+	mapping (address => uint256) creditToPay;
+	modifier mustGenerator {
+	   assert(msg.sender==generator); 
+	   _;
+	}
+	modifier mustSupervisor {
+	    assert(msg.sender==supervisor);
+	    _;
+	}
+	modifier mustPay {
+	   assert(creditToPay[msg.sender]>0); 
+	   assert(creditToPay[msg.sender]<=balances[msg.sender]); 
+	   _;
+	}
+
+	constructor() public {
+	    generator=msg.sender;
+	}
+	function setSupervisor( address who ) public mustGenerator returns (bool) {
+	    supervisor = who;
+	    return true;
+	}
+	function setCreditToPay( address who, uint credit ) public mustSupervisor returns (bool) {
+	    creditToPay[who] = credit;
+	    return true;
+	}
+	function sendCredit( address who, uint credit ) public mustSupervisor returns (bool) {
+	    balances[who] += credit;
+		supply += credit;
+	}
+	
+}
+
+contract TR is TRSupervise {
+    struct Object {
+        address owner;
+        address[] preOwners;
+        uint256[] materials;
+        mapping (address=>uint256) credits;
+        address receiver;
+        bool valid;
+    }
+    mapping (uint256=>Object) objects;
+    
+    modifier mustPay {
+        assert( creditToPay[msg.sender] > 0 );
+        assert( balances[msg.sender] >= creditToPay[msg.sender] );
+        _;
+    }
+    function mustOwner(uint256[] ids) private constant {
+        uint256 i;
+        for(i=0;i<ids.length;i++) {
+            assert(objects[ids[i]].valid);
+			assert(msg.sender==objects[ids[i]].owner);
+        }
+    }
+    function pay(Object obj) private {
+ 		balances[msg.sender] -= creditToPay[msg.sender];	
+		obj.credits[msg.sender] += creditToPay[msg.sender];
+    }
+    function create(uint256[] _materials) public returns (uint256 id) {
+        Object obj = Object({
+            owner: msg.sender,
+            preOwners: new address[](0),
+            materials: _materials,
+            valid: true
+        });
+        id = keccak256(msg.sender, _materials, block.timestamp);
+		objects[id] = obj;
+		return id;
+    }
+    function push(uint256 id, address to) public mustPay {
+        Object obj = objects[id];
+        pay(obj);
+    }
+}
