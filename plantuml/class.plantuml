@@ -14,11 +14,14 @@ class "supervise" as supervise {
 }
 class "traceability" as trace {
 	objects[id=>object]
+	event noteArbitration()
 	mustOwner()
 	create mustOwner (sources[])
 	push mustPay()
 	pull()
-	destroy mustSupervisor()
+	arbitrate mustSupervisor()
+	refund mustOwner()
+	isPushedToMe()
 }
 class "object" as object {
 	materials[]
@@ -26,6 +29,7 @@ class "object" as object {
 	preOwners[]
 	credits[address=>uint]
 	receiver
+	pushTime
 }
 
 ERC20 <|- token
