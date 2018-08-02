@@ -137,23 +137,6 @@ contract TR is TRSupervise {
         obj.credit = 0;
       	balances[obj.owner] = creditToReturn;
     }
-	/*    
-    function returnCreditToLastOwner(Object obj) private {
-		if(obj.exOwners.length>0) {
-	        address lastOwner = obj.exOwners[obj.exOwners.length-1];
-			uint256 creditToReturn = obj.credit;
-    	    obj.credit = 0;
-        	balances[lastOwner] = creditToReturn;
-		}
-    }
-    function returnCreditToVendors(Object obj) private {
-		uint256 i;
-		for(i=0;i<obj.materials.length;i++) {
-		    Object obj = getObjectById(obj.materials[i]);
-		    returnCreditToOwner(obj);
-		}
-    }
-    */
     function createObjectId() private returns (uint256 id) {
         bytes memory b = new bytes(64);
         bytes32 addr32 = bytes32(msg.sender);

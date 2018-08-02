@@ -16,7 +16,7 @@ class "traceability" as trace {
 	objects[id=>object]
 	event noteArbitration()
 	mustOwner()
-	create mustOwner (sources[])
+	produce mustOwner (sources[])
 	push mustPay()
 	pull()
 	arbitrate mustSupervisor()

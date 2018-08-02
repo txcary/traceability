@@ -8,3 +8,6 @@ Please note this is an UNFINISED project.
 
 ## Classes
 ![](https://github.com/txcary/traceability/blob/master/plantuml/class.png)
+
+## sequence
+![](https://github.com/txcary/traceability/blob/master/plantuml/sequence.png)

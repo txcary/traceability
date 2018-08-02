@@ -1,0 +1,64 @@
+@startuml
+participant contract
+participant generator
+participant supervisor
+participant vendor
+participant manufactor
+participant consumer
+
+== Init Contract ==
+activate generator
+generator->>contract: create contract
+activate contract
+generator->>contract: setSupervisor()
+deactivate generator
+
+== Add and setup participants ==
+activate supervisor
+loop "sendloop for each actor"
+supervisor->>contract: setCreditToPay()
+supervisor->>contract: sendCredit()
+end
+deactivate supervisor
+
+== vendor produce materaial then deliver to manufactor ==
+activate vendor
+vendor->>contract: produce([])
+contract-->vendor: material_id
+vendor->>contract: push(manufactor, material_id)
+contract->>contract: charge vendor's credit
+vendor-->manufactor: delivery material offline
+
+== manufactor produce product with material(s) ==
+activate manufactor
+manufactor->>contract: isPushedToMe()
+manufactor-->manufactor: validate material offline
+alt pull the material or ask supervisor to arbitrate
+manufactor->>contract: pull(material_id)
+contract-->vendor: returns the credit
+deactivate vendor
+else
+manufactor-->supervisor: Ask for arbitration offline
+activate supervisor
+supervisor->>contract: arbitrate()
+deactivate supervisor
+end
+manufactor->>contract: produce([material_id/ids])
+contract-->manufactor: production_id
+manufactor->>contract: push(consumer, production_id)
+manufactor-->consumer: delivery product offline
+== Consumer consume the product ==
+activate consumer
+consumer->>contract: isPushedToMe()
+consumer-->consumer: enjoy product
+deactivate consumer
+
+opt consumer certified the production
+consumer->>contract: pull(product_id)
+else
+manufactor-->manufactor: wait until expire
+manufactor->>contract: refund()
+contract-->manufactor: returns credit
+end
+deactivate manufactor
+@enduml
