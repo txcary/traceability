@@ -56,7 +56,9 @@ deactivate consumer
 opt consumer certified the production
 consumer->>contract: pull(product_id)
 else
+deactivate manufactor
 manufactor-->manufactor: wait until expire
+activate manufactor
 manufactor->>contract: refund()
 contract-->manufactor: returns credit
 end
