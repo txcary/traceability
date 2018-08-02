@@ -81,7 +81,7 @@ contract TRSupervise is TRToken {
 	}
 	function setCreditToPay( address who, uint credit, uint expireDay ) public mustSupervisor returns (bool) {
 	    creditToPay[who] = credit;
-	    creditExpire[address] = expireDay;
+	    creditExpire[who] = expireDay;
 	    return true;
 	}
 	function sendCredit( address who, uint credit ) public mustSupervisor returns (bool) {
@@ -101,6 +101,7 @@ contract TR is TRSupervise {
         bool valid;
     }
     mapping (uint256=>Object) objects;
+    mapping (address=>uint256) objectCount;
     event noteArbitration(
         address indexed addr, 
         uint256 indexed credit, 
@@ -112,13 +113,13 @@ contract TR is TRSupervise {
         assert( balances[msg.sender] >= creditToPay[msg.sender] );
         _;
     }
-    function getObjectById(uint256 id) private returns (Object) {
-        Object obj = objects[id];
+    function getObjectById(uint256 id) private constant returns (Object storage) {
+        Object storage obj = objects[id];
         assert(obj.valid);
         return obj;
     }
     function checkOwnerOfObject(uint256 id) private constant {
-        Object obj = getObjectById(id);
+        Object storage obj = getObjectById(id);
 		assert(msg.sender==obj.owner);
     }
     function checkOwnerOfMaterials(uint256[] ids) private constant {
@@ -153,29 +154,42 @@ contract TR is TRSupervise {
 		}
     }
     */
-    function create(uint256[] _materials) public returns (uint256 id) {
+    function createObjectId() private returns (uint256 id) {
+        bytes memory b = new bytes(64);
+        bytes32 addr32 = bytes32(msg.sender);
+        bytes32 count32 = bytes32( objectCount[msg.sender] );
+        objectCount[msg.sender]++;
+        for (uint i=0; i<32; i++) {
+            b[i] = addr32[i];
+            b[32+i] = count32[i];
+        }
+        id = uint256(keccak256(b));
+    }
+    function produce(uint256[] _materials) public returns (uint256 id) {
         checkOwnerOfMaterials(_materials);
-        Object obj = Object({
+        Object memory obj = Object ({
             owner: msg.sender,
             exOwners: new address[](0),
             materials: _materials,
+            receiver: 0,
+            pushTime: 0,
             credit: 0,
             valid: true
         });
-        id = keccak256(msg.sender, _materials, block.timestamp);
+        id = createObjectId();
 		objects[id] = obj;
 		return id;
     }
     function push(uint256 id, address to) public mustPay returns (bool) {
         checkOwnerOfObject(id);
-        Object obj = getObjectById(id);
+        Object storage obj = getObjectById(id);
         payCredit(obj);
         obj.receiver = to;
         obj.pushTime = now;
         return true;
     }
     function pull(uint256 id) public returns (bool) {
-        Object obj = getObjectById(id);
+        Object storage obj = getObjectById(id);
         assert(obj.receiver==msg.sender);
 		returnCreditToOwner(obj);
         obj.receiver = 0;
@@ -185,23 +199,23 @@ contract TR is TRSupervise {
         return true;
     }
     function arbitrate(uint256 id, string message) public mustSupervisor returns (bool) {
-        Object obj = getObjectById(id);
+        Object storage obj = getObjectById(id);
         obj.credit = 0;
         supply -= obj.credit;
-		noteArbitration(obj.owner, obj.credit, message);
+		emit noteArbitration(obj.owner, obj.credit, message);
         return true;
     }
 	function refund(uint256 id) public returns (bool) {
         checkOwnerOfObject(id);
-        Object obj = getObjectById(id);
+        Object storage obj = getObjectById(id);
         assert(obj.owner==msg.sender);
         if(now > obj.pushTime + creditExpire[msg.sender]* 1 days) {
 			returnCreditToOwner(obj);
         }
         return true;
 	}
-	function isPushedToMe(uint256 id) public returns (bool) {
-	    Object obj = getObjectById(id);
+	function isPushedToMe(uint256 id) public constant returns (bool) {
+	    Object storage obj = getObjectById(id);
 	    if(obj.receiver==msg.sender) {
 	        return true;
 	    }
