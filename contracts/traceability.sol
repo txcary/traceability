@@ -128,14 +128,10 @@ contract TR is TRSupervise {
             checkOwnerOfObject(ids[i]);
         }
     }
-    function payCredit(Object obj) private {
- 		balances[msg.sender] -= creditToPay[msg.sender];	
-		obj.credit += creditToPay[msg.sender];
-    }
-    function returnCreditToOwner(Object obj) private {
+    function returnCreditToOwner(Object storage obj) private {
 		uint256 creditToReturn = obj.credit;
         obj.credit = 0;
-      	balances[obj.owner] = creditToReturn;
+      	balances[obj.owner] += creditToReturn;
     }
     function createObjectId() private returns (uint256 id) {
         bytes memory b = new bytes(64);
@@ -166,7 +162,8 @@ contract TR is TRSupervise {
     function push(uint256 id, address to) public mustPay returns (bool) {
         checkOwnerOfObject(id);
         Object storage obj = getObjectById(id);
-        payCredit(obj);
+ 		balances[msg.sender] -= creditToPay[msg.sender];	
+		obj.credit += creditToPay[msg.sender];
         obj.receiver = to;
         obj.pushTime = now;
         return true;
@@ -183,8 +180,8 @@ contract TR is TRSupervise {
     }
     function arbitrate(uint256 id, string message) public mustSupervisor returns (bool) {
         Object storage obj = getObjectById(id);
-        obj.credit = 0;
         supply -= obj.credit;
+        obj.credit = 0;
 		emit noteArbitration(obj.owner, obj.credit, message);
         return true;
     }
