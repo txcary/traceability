@@ -1,5 +1,5 @@
-var traceability = artifacts.require("./traceability.sol");
+var Migrations = artifacts.require("./Migrations.sol");
 
 module.exports = function(deployer) {
-  deployer.deploy(traceability);
+  deployer.deploy(Migrations);
 };

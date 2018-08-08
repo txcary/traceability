@@ -90,7 +90,7 @@ contract TRSupervise is TRToken {
 	}
 }
 
-contract TR is TRSupervise {
+contract Traceability is TRSupervise {
     struct Object {
         address owner;
         address[] exOwners;
