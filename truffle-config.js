@@ -13,11 +13,6 @@
  */
 
 module.exports = {
-		networks: {
-			development: {
-				host: "172.17.0.2",
-				port: 8545,
-				network_id: "*"
-			}
-		}
+  // See <http://truffleframework.com/docs/advanced/configuration>
+  // to customize your Truffle configuration!
 };
